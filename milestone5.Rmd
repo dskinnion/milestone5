@@ -1,0 +1,270 @@
+---
+title: 'Milestone #5'
+author: "Dominic Skinnion"
+date: "10/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(purrr)
+library(janitor)
+library(plotrix)
+library(scales)
+library(ggthemes)
+library(robustfa)
+library(tidyverse)
+```
+
+```{r data, include = FALSE}
+
+elections <- read.csv("raw-data/elec.csv") %>%
+   separate("Year", c("year", "president"), sep = "-", remove = TRUE,
+  convert = TRUE) %>%
+  clean_names()
+
+
+census <- read.csv("raw-data/nhgis0011_ts_state.csv") %>%
+  clean_names()
+```
+
+```{r elections data, include = FALSE}
+# colnames(elections)[colnames(elections)=="x_3"] <- "percent_4"
+# colnames(elections)[colnames(elections)=="ev_3"] <- "ev_4"
+# colnames(elections)[colnames(elections)=="x_2"] <- "percent_3"
+# colnames(elections)[colnames(elections)=="ev_2"] <- "ev_3"
+# colnames(elections)[colnames(elections)=="x_1"] <- "percent_2"
+# colnames(elections)[colnames(elections)=="ev_1"] <- "ev_2"
+# colnames(elections)[colnames(elections)=="x"] <- "percent_1"
+# colnames(elections)[colnames(elections)=="ev"] <- "ev_1"
+```
+
+```{r fixing variable types, echo = FALSE}
+elections <- elections %>%
+  mutate(year = year, president = president, state = state, total = total, party_1 = as.numeric(as.character(party_1)), percent_1 = as.numeric(as.character(x)), electoral_votes_1 = as.numeric(as.character(ev)), party_2 = as.numeric(as.character(party_2)), percent_2 = as.numeric(as.character(x_1)), electoral_votes_2 = as.numeric(as.character(ev_1)), party_3 = as.numeric(as.character(party_3)), percent_3 = as.numeric(as.character(x_2)), electoral_votes_3 = as.numeric(as.character(ev_2)), party_4 = as.numeric(as.character(party_4)), percent_4 = as.numeric(as.character(x_3)), electoral_votes_4 = as.numeric(as.character(ev_3)), party = party, notes = notes) %>%
+  select(year, president, state, total, party_1, percent_1, electoral_votes_1, party_2, percent_2, electoral_votes_2, party_3, percent_3, electoral_votes_3, party_4, percent_4, electoral_votes_4, party, notes)
+
+elections[is.na(elections)] <- 0
+```
+```{r adding total EV}
+elections <- elections %>%
+  mutate(electoral_votes_total = electoral_votes_1 + electoral_votes_2 + electoral_votes_3 + electoral_votes_4)
+```
+
+```{r state, include = FALSE}
+# 
+# separate_by_state <- function(n){
+# 
+#    nf  <- gsub("()","",sys.call()[51])
+#    titles <- c(Alambama = "Voters in Alabama",
+#                Alaska = "Voters in Alaska",
+#                Arizona = "Voters in Arizona",
+#                Arkansas = "Voters in Arkansas",
+#                California = "Voters in California",
+#                Colorado = "Voters in Colorado",
+#                Connecticut = "Voters in Connecticut",
+#                Delaware = "Voters in Delaware",
+#                Dist. of Col. = "Voters in District of Columbia",
+#                Florida = "Voters in Florida",
+#                Georgia = "Voters in Georgia",
+#                Hawaii = "Voters in Hawaii",
+#                Idaho = "Voters in Idaho",
+#                Illinois = "Voters in Illinois",
+#                Indiana = "Voters in OIndiana",
+#                Iowa = "Voters in Iowa",
+#                Kansas = "Voters in Kansas",
+#                Kentucky = "Voters in Kentucky",
+#                Louisiana = "Voters in Louisiana",
+#                Maine = "Voters in Maine",
+#                Maryland = "Voters in Maryland",
+#                Massachusetts = "Voters in Massachusetts",
+#                Michigan = "Voters in Michigan",
+#                Minnesota = "Voters in Minnesota",
+#                Mississippi = "Voters in Mississippi",
+#                Missouri = "Voters in Missouri",
+#                Montana = "Voters in Montana",
+#                Nebraska = "Voters in Nebraska",
+#                Nevada = "Voters in Nevada",
+#                New Hampshire = "Voters in New Hampshire",
+#                New Jersey = "Voters in New Jersey",
+#                New Mexico = "Voters in New Mexico",
+#                New York = "Voters in North Carolina",
+#                North Carolina = "Voters in North Carolina",
+#                North Dakota = "Voters in North Dakota",
+#                Ohio = "Voters in Ohio",
+#                Oklahoma = "Voters in Oklahoma",
+#                Oregon = "Voters in Oregon",
+#                Pennsylvania = "Voters in Pennsylvania",
+#                Rhode Island = "Voters in Rhode Island",
+#                South Carolina = "Voters in South Carolina",
+#                South Dakota = "Voters in South Dakota",
+#                Tennessee = "Voters in Tennessee",
+#                Texas = "Voters in Texas",
+#                Utah = "Voters in Utah",
+#                Vermont = "Voters in Vermont",
+#                Virginia = "Voters in Virginia",
+#                Washington = "Voters in Washington",
+#                West Virginia = "Voters in West Virginia",
+#                Wisconsin = "Voters in Wisconsin",
+#                Wyoming = "Voters in Wyoming"
+#                )
+# 
+#    plot <- elections %>%
+#      filter(state == n) %>%
+#      select(year, total) %>%
+#      ggplot(aes(x = year, y = total)) +
+#        labs(x = "Year", y = "Number of Voters") +
+#        geom_line() +
+#        ggtitle(titles[nf])
+# 
+#     return(plot)
+# }
+# 
+# states <- c("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Dist. of Col.", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming")
+# 
+# map(states, separate_by_state)
+```
+# Number of Voters Over Time in the 13 Original Colonies
+```{r MA, echo = FALSE}
+
+MA <- elections %>%
+  filter(state == "Massachusetts")
+
+ggplot(MA, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Massachusetts", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r DE, echo = FALSE}
+DE <- elections %>%
+  filter(state == "Delaware")
+
+ggplot(DE, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Delaware", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r MD, echo = FALSE}
+MD <- elections %>%
+  filter(state == "Maryland")
+
+ggplot(MD, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Maryland", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r CT, echo = FALSE}
+CT <- elections %>%
+  filter(state == "Connecticut") 
+
+ggplot(CT, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Connecticut", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r RI, echo = FALSE}
+RI <- elections %>%
+  filter(state == "Rhode Island")
+
+ggplot(RI, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Rhode Island", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r NH, echo = FALSE}
+NH <- elections %>%
+  filter(state == "New Hampshire") 
+
+ggplot(NH, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in New Hampshire", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r NY, echo = FALSE}
+NY <- elections %>%
+  filter(state == "New York") 
+
+ggplot(NY, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in New York", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r PA, echo = FALSE}
+PA <- elections %>%
+  filter(state == "Pennsylvania")
+
+ggplot(PA, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Pennsylvania", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r NJ, echo = FALSE}
+NJ <- elections %>%
+  filter(state == "New Jersey") 
+
+ggplot(NJ, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in New Jersey", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r VA, echo = FALSE}
+VA <- elections %>%
+  filter(state == "Virginia")
+
+ggplot(VA, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Virginia", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r NC, echo = FALSE}
+NC <- elections %>%
+  filter(state == "North Carolina") 
+
+ggplot(NC, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in North Carolina", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r SC, echo = FALSE}
+SC <- elections %>%
+  filter(state == "South Carolina") 
+
+ggplot(SC, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in South Carolina", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
+
+```{r GA, echo = FALSE}
+GA <- elections %>%
+  filter(state == "Georgia") 
+
+ggplot(GA, aes(x = year, y = total)) +
+  geom_line() +
+  labs(title = "Voters in Georgia", x = "Year", y = "Number of Voters") +
+  scale_y_continuous(labels = comma, limits = c(0, 8000000)) +
+  theme_stata()
+```
