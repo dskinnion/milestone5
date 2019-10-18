@@ -39,16 +39,18 @@ census <- read.csv("raw-data/nhgis0011_ts_state.csv") %>%
 # colnames(elections)[colnames(elections)=="ev"] <- "ev_1"
 ```
 
-```{r fixing variable types, echo = FALSE}
+```{r fixing variable types, echo = FALSE, warning = FALSE}
 elections <- elections %>%
   mutate(year = year, president = president, state = state, total = total, party_1 = as.numeric(as.character(party_1)), percent_1 = as.numeric(as.character(x)), electoral_votes_1 = as.numeric(as.character(ev)), party_2 = as.numeric(as.character(party_2)), percent_2 = as.numeric(as.character(x_1)), electoral_votes_2 = as.numeric(as.character(ev_1)), party_3 = as.numeric(as.character(party_3)), percent_3 = as.numeric(as.character(x_2)), electoral_votes_3 = as.numeric(as.character(ev_2)), party_4 = as.numeric(as.character(party_4)), percent_4 = as.numeric(as.character(x_3)), electoral_votes_4 = as.numeric(as.character(ev_3)), party = party, notes = notes) %>%
   select(year, president, state, total, party_1, percent_1, electoral_votes_1, party_2, percent_2, electoral_votes_2, party_3, percent_3, electoral_votes_3, party_4, percent_4, electoral_votes_4, party, notes)
 
 elections[is.na(elections)] <- 0
 ```
-```{r adding total EV}
+
+```{r adding total EV, echo = FALSE}
 elections <- elections %>%
-  mutate(electoral_votes_total = electoral_votes_1 + electoral_votes_2 + electoral_votes_3 + electoral_votes_4)
+  mutate(electoral_votes_total = electoral_votes_1 + electoral_votes_2 + electoral_votes_3 + electoral_votes_4) %>%
+  mutate(electoral_votes_total = ifelse(electoral_votes_total == 0, party_1 + party_2 + party_3 + party_4, electoral_votes_total))
 ```
 
 ```{r state, include = FALSE}
