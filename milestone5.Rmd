@@ -159,6 +159,21 @@ electoral_votes[2237, 5] = 12
 # 
 # map(states, separate_by_state)
 ```
+# 10 States with the Most Electoral Votes in 2016
+
+```{r ev 2016 plot, echo = FALSE}
+electoral_votes %>%
+  filter(year == 2016) %>%
+  arrange(desc(electoral_votes_total)) %>%
+  slice(1:10) %>%
+  ggplot(aes(x = reorder(state, -electoral_votes_total), y = electoral_votes_total, fill = party)) +
+    geom_col() +
+    coord_flip() +
+    scale_fill_manual(values = c("#0015BC", "#BC1500"), name = "Party") +
+    labs(title = "States with the Most Electoral Votes in 2016", x = "Number of Electoral Votes", y = "State")
+```
+
+
 # Number of Voters Over Time in the 13 Original Colonies
 ```{r MA, echo = FALSE}
 
