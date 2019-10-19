@@ -15,6 +15,11 @@ library(ggthemes)
 library(robustfa)
 library(tidyverse)
 ```
+# About
+
+In the United States, the people do not directly vote for President. The Founding Fathers believed that a true democracy was subject to the rule of factions and mob rule. The electoral college, they believed, would protect against this. Instead of having each person's vote count towards President, each state receives a certain number of electoral votes. The number of electoral votes for each state is equal to the numbers of members of congress for that state (the number of senators, plus the number of representatives). When the 23rd Amendment was ratified in 1961, Washington D.C. was also given electoral votes, but not to exceed the lowest number of votes that a state has -- this has usually limited D.C. to 3 votes.
+
+The data for the United States general elections was found from a Github repository which included multiple government datasets. Elections that were contested were labelled with asterisks in this dataset, so I ammended the dataset with the wikipedia data set found here: https://en.wikipedia.org/wiki/United_States_Electoral_College. The population data for the states are based off of the United States Census, conducted every 10 years. This dataset was found from a GitHub repository with historical data.
 
 ```{r data, include = FALSE}
 
@@ -48,9 +53,37 @@ elections[is.na(elections)] <- 0
 ```
 
 ```{r adding total EV, echo = FALSE}
-elections <- elections %>%
+elections_with_total_ev <- elections %>%
   mutate(electoral_votes_total = electoral_votes_1 + electoral_votes_2 + electoral_votes_3 + electoral_votes_4) %>%
   mutate(electoral_votes_total = ifelse(electoral_votes_total == 0, party_1 + party_2 + party_3 + party_4, electoral_votes_total))
+```
+
+```{r fixing total votes, echo = FALSE}
+electoral_votes <- elections_with_total_ev %>%
+  select(year, president, state, party, electoral_votes_total)
+
+# Need to fix numbers: contested elections. I am looking at the number of electoral votes allotted, so these numbers should still be counted. Corrected numbers from https://en.wikipedia.org/wiki/United_States_Electoral_College
+electoral_votes[488, 5] = 6
+electoral_votes[493, 5] = 11
+electoral_votes[498, 5] = 12
+electoral_votes[499, 5] = 8
+electoral_votes[501, 5] = 8
+electoral_votes[506, 5] = 15
+electoral_votes[518, 5] = 12
+electoral_votes[519, 5] = 8
+electoral_votes[1429, 5] = 11
+electoral_votes[1477, 5] = 11
+electoral_votes[1500, 5] = 8
+electoral_votes[1512, 5] = 8
+electoral_votes[1675, 5] = 12
+electoral_votes[1727, 5] = 9
+electoral_votes[1881, 5] = 6
+electoral_votes[1994, 5] = 3
+electoral_votes[2060, 5] = 10
+electoral_votes[2115, 5] = 5
+electoral_votes[2201, 5] = 4
+electoral_votes[2233, 5] = 38
+electoral_votes[2237, 5] = 12
 ```
 
 ```{r state, include = FALSE}
